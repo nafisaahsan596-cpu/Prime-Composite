@@ -1,0 +1,359 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prime vs Composite Separator</title>
+  <style>
+    :root{
+      --bg:#0b1220;
+      --card:#121a2b;
+      --muted:#9bb0d0;
+      --text:#e8efff;
+      --accent:#4cc9f0;
+      --good:#2dd4bf;
+      --bad:#fb7185;
+      --border:#24324f;
+    }
+    body{
+      margin:0;
+      font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;
+      background:linear-gradient(180deg,#0b1220,#070a12);
+      color:var(--text);
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      padding:28px 16px;
+    }
+    .wrap{ width:min(980px,100%); }
+    .header{
+      display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap;
+      margin-bottom:18px;
+    }
+    h1{ margin:0; font-size:22px; letter-spacing:.2px; }
+    .sub{ color:var(--muted); margin-top:6px; font-size:14px; }
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:16px;
+    }
+    @media (max-width: 860px){ .grid{ grid-template-columns:1fr; } }
+    .card{
+      background:rgba(18,26,43,.9);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+      box-shadow:0 10px 30px rgba(0,0,0,.25);
+    }
+    label{ display:block; font-weight:600; margin:10px 0 6px; font-size:14px; color:var(--text); }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    input[type="text"], input[type="number"]{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #2a3b5e;
+      background:#0f1628;
+      color:var(--text);
+      outline:none;
+    }
+    input[type="number"]{ width: 100%; }
+    .row > .field{ flex:1; min-width:180px; }
+    .btns{ display:flex; gap:10px; margin-top:14px; flex-wrap:wrap; }
+    button{
+      border:0;
+      padding:11px 14px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      color:#071018;
+      background:var(--accent);
+    }
+    button.secondary{
+      background:transparent;
+      color:var(--text);
+      border:1px solid #2a3b5e;
+    }
+    button:disabled{
+      opacity:.6;
+      cursor:not-allowed;
+    }
+    .hint{ color:var(--muted); font-size:13px; margin-top:6px; line-height:1.35; }
+    .outputs .pill{
+      display:inline-flex; gap:8px; align-items:center;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid #2a3b5e;
+      background:#0f1628;
+      margin:8px 8px 0 0;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .pill b{ color:var(--text); }
+    .resultBox{
+      margin-top:12px;
+      border:1px dashed #2a3b5e;
+      border-radius:14px;
+      padding:12px;
+      background:#0f1628;
+      min-height:72px;
+      white-space:pre-wrap;
+      word-break:break-word;
+      color:var(--text);
+    }
+    .tag-good{ color:var(--good); font-weight:800; }
+    .tag-bad{ color:var(--bad); font-weight:800; }
+    .error{
+      margin-top:10px;
+      color: #ffd1da;
+      background: rgba(251,113,133,.14);
+      border:1px solid rgba(251,113,133,.35);
+      padding:10px 12px;
+      border-radius:12px;
+      display:none;
+    }
+    .footer-note{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:14px;
+      line-height:1.4;
+    }
+    select{
+      width:100%;
+      padding:10px 12px;
+      border-radius:10px;
+      border:1px solid #2a3b5e;
+      background:#0f1628;
+      color:var(--text);
+      outline:none;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="header">
+      <div>
+        <h1>Prime vs Composite Number Separator</h1>
+        <div class="sub">Enter numbers (list) or a range, then get primes and composites.</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <label for="mode">Input mode</label>
+        <select id="mode">
+          <option value="list" selected>List of numbers</option>
+          <option value="range">Range (start → end)</option>
+        </select>
+
+        <div id="listPane">
+          <label for="numbers">Numbers</label>
+          <input id="numbers" type="text" placeholder="e.g., 1 2 3 4 5 16 21 22"/>
+          <div class="hint">Separate by spaces or commas. (0 and 1 will be shown as “Neither”.)</div>
+        </div>
+
+        <div id="rangePane" style="display:none;">
+          <div class="row">
+            <div class="field">
+              <label for="start">Start</label>
+              <input id="start" type="number" value="1" />
+            </div>
+            <div class="field">
+              <label for="end">End</label>
+              <input id="end" type="number" value="50" />
+            </div>
+          </div>
+          <div class="hint">Works even if start &gt; end (it will count downward).</div>
+        </div>
+
+        <div class="btns">
+          <button id="calcBtn">Separate</button>
+          <button id="clearBtn" class="secondary" type="button">Clear</button>
+        </div>
+
+        <div id="errorBox" class="error"></div>
+        <div class="footer-note">Tip: Try entering “-1 0 1 2 3 4 5 6 7 8 9 10”.</div>
+      </div>
+
+      <div class="card outputs">
+        <div class="pill"><span class="tag-good">Primes</span><b id="primeCount">0</b></div>
+        <div class="pill"><span class="tag-bad">Composites</span><b id="compCount">0</b></div>
+        <div class="pill"><b>Neither</b><b id="neitherCount">0</b></div>
+
+        <label style="margin-top:14px;">Results</label>
+        <div class="resultBox" id="resultBox">(results will appear here)</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function isPrime(n){
+      if (n < 2) return false;
+      if (n === 2) return true;
+      if (n % 2 === 0) return false;
+      const limit = Math.floor(Math.sqrt(n));
+      for (let d = 3; d <= limit; d += 2){
+        if (n % d === 0) return false;
+      }
+      return true;
+    }
+
+    function separate(nums){
+      const primes = [];
+      const composites = [];
+      const neither = []; // 0 and 1 (and negatives)
+
+      for (const n of nums){
+        if (n < 2){
+          neither.push(n);
+        } else if (isPrime(n)){
+          primes.push(n);
+        } else {
+          composites.push(n);
+        }
+      }
+      return { primes, composites, neither };
+    }
+
+    function parseList(text){
+      // Allow spaces, commas, newlines
+      const cleaned = text.trim();
+      if (!cleaned) return [];
+      const parts = cleaned.split(/[\s,]+/);
+      const nums = [];
+
+      for (const p of parts){
+        if (p === "") continue;
+        const v = Number(p);
+        if (!Number.isFinite(v)) throw new Error(`Invalid number: "${p}"`);
+        nums.push(v);
+      }
+      // Prime/composite should be for integers; enforce by rounding check
+      for (let i=0;i<nums.length;i++){
+        if (!Number.isInteger(nums[i])) throw new Error(`All inputs must be integers. Got: ${nums[i]}`);
+      }
+      return nums;
+    }
+
+    function rangeNums(start, end){
+      start = Number(start);
+      end = Number(end);
+      if (!Number.isFinite(start) || !Number.isFinite(end)) return [];
+      if (!Number.isInteger(start) || !Number.isInteger(end)) return [];
+      const nums = [];
+      if (start <= end){
+        for (let n=start; n<=end; n++) nums.push(n);
+      } else {
+        for (let n=start; n>=end; n--) nums.push(n);
+      }
+      return nums;
+    }
+
+    const modeEl = document.getElementById('mode');
+    const listPane = document.getElementById('listPane');
+    const rangePane = document.getElementById('rangePane');
+
+    const numbersEl = document.getElementById('numbers');
+    const startEl = document.getElementById('start');
+    const endEl = document.getElementById('end');
+
+    const calcBtn = document.getElementById('calcBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const errorBox = document.getElementById('errorBox');
+    const resultBox = document.getElementById('resultBox');
+
+    const primeCount = document.getElementById('primeCount');
+    const compCount = document.getElementById('compCount');
+    const neitherCount = document.getElementById('neitherCount');
+
+    function setError(msg){
+      errorBox.style.display = 'block';
+      errorBox.textContent = msg;
+    }
+    function clearError(){
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+    }
+
+    function render(nums){
+      const { primes, composites, neither } = separate(nums);
+
+      primeCount.textContent = String(primes.length);
+      compCount.textContent = String(composites.length);
+      neitherCount.textContent = String(neither.length);
+
+      const lines = [];
+      lines.push("Primes:");
+      lines.push(primes.length ? primes.join(", ") : "(none)");
+      lines.push("");
+      lines.push("Composites:");
+      lines.push(composites.length ? composites.join(", ") : "(none)");
+      lines.push("");
+      lines.push("Neither (0, 1, negatives):");
+      lines.push(neither.length ? neither.join(", ") : "(none)");
+
+      resultBox.textContent = lines.join("\n");
+    }
+
+    modeEl.addEventListener('change', () => {
+      const v = modeEl.value;
+      if (v === 'list'){
+        listPane.style.display = 'block';
+        rangePane.style.display = 'none';
+      } else {
+        listPane.style.display = 'none';
+        rangePane.style.display = 'block';
+      }
+      clearError();
+      resultBox.textContent = "(results will appear here)";
+      primeCount.textContent = "0";
+      compCount.textContent = "0";
+      neitherCount.textContent = "0";
+    });
+
+    calcBtn.addEventListener('click', () => {
+      clearError();
+      try{
+        let nums = [];
+        if (modeEl.value === 'list'){
+          nums = parseList(numbersEl.value);
+        } else {
+          const s = startEl.value;
+          const e = endEl.value;
+
+          // ensure integers
+          const start = Number(s), end = Number(e);
+          if (!Number.isInteger(start) || !Number.isInteger(end)){
+            throw new Error("Start and End must be integers.");
+          }
+          // Prevent extremely huge ranges
+          const count = Math.abs(end - start) + 1;
+          if (count > 50000) throw new Error("Range too large (max 50,000 numbers).");
+          nums = rangeNums(start, end);
+        }
+
+        if (nums.length === 0){
+          setError("Please enter at least one valid number.");
+          return;
+        }
+
+        render(nums);
+      } catch (err){
+        setError(err.message || "Something went wrong.");
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      clearError();
+      numbersEl.value = "";
+      startEl.value = 1;
+      endEl.value = 50;
+
+      resultBox.textContent = "(results will appear here)";
+      primeCount.textContent = "0";
+      compCount.textContent = "0";
+      neitherCount.textContent = "0";
+    });
+  </script>
+</body>
+</html>
