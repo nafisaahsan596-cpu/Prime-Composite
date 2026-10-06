@@ -159,7 +159,7 @@
             </div>
             <div class="field">
               <label for="end">End</label>
-              <input id="end" type="number" value="50" />
+              <input id="end" type="number" value="3000000" max="3000000" />
             </div>
           </div>
           <div class="hint">Works even if start &gt; end (it will count downward).</div>
@@ -328,7 +328,7 @@
           }
           // Prevent extremely huge ranges
           const count = Math.abs(end - start) + 1;
-          if (count > 50000) throw new Error("Range too large (max 50,000 numbers).");
+          if (count > 3000000) throw new Error("Range too large (max 3,000,000 numbers).");
           nums = rangeNums(start, end);
         }
 
@@ -347,7 +347,7 @@
       clearError();
       numbersEl.value = "";
       startEl.value = 1;
-      endEl.value = 50;
+      endEl.value = 3000000;
 
       resultBox.textContent = "(results will appear here)";
       primeCount.textContent = "0";
